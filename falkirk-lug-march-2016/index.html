@@ -38,19 +38,31 @@
       </section>
 
         <section>
-            <div class="">
+            <div>
                 <img src="images/dr4goonis.jpg" class="avatar">
                 <h4>Paul Dragoonis</h4>
                 <ul>
                     <li class="fragment">From Glasgow (a weegie :-)</li>
                     <li class="fragment">Full-Stack Software Consultant</li>
-                    <li class="fragment">QA Analyst</li>
+                    <li class="fragment">Quality Assurance Engineer</li>
+                    <li class="fragment">@dr4goonis / paul@dragoonis.com</li>
                 </ul>
             </div>
         </section>
 
         <section>
-            <h2>Agenda</h2>
+            <h4>Analyse and influence on quality of</h4>
+            <ul>
+                <li class="fragment">code, environments, tech stack</li>
+                <li class="fragment">BDD, DDD, TDD</li>
+                <li class="fragment">continuous integration pipelines</li>
+                <li class="fragment">deployment / rollback quality</li>
+                <li class="fragment">security / scaling</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Today</h2>
             <ul>
                 <li class="fragment">Continuous Deployment vs Delivery</li>
                 <li class="fragment">Building a strong CI pipeline</li>
@@ -264,27 +276,189 @@ buildMonitorView('project-a-build-monitor')
         </section>
 
         <section>
-            <h2>What is docker?</h2>
             <p><img src="images/docker-containers2.png" width="100%"></p>
         </section>
 
-
-
-        <!-- template -->
         <section>
-            <h2>Title</h2>
+            <h2>Docker on different OS</h2>
+            <p><img src="images/docker-locally.jpg" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Docker Hub (official registry)</h2>
+            <p><img src="images/docker-hub.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Running an image from docker hub</h2>
+              <pre><code>
+    docker pull image_name:tag
+    docker pull nginx:latest
+    docker pull node:5.6
+    docker pull mysql-server:5.7
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Making your own image</h2>
+              <pre>Dockerfile<code>
+FROM ubuntu:14.04
+
+RUN apt-get update && apt-get install -y python python-dev postgresql
+
+USER postgres
+
+RUN /etc/init.d/postgresql start && createdb -T template0 -E UTF8 my_database
+
+USER root
+
+EXPOSE 8000
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Building your image</h2>
+            <pre><code>
+docker build -t falkirk_db_image
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Docker compose (container orchestration)</h2>
+            <pre>docker-compose.yml<code>
+database:
+  image: falkirk_db_image
+
+cache:
+  image: redis:latest
+  ports:
+    - "6379:6379"
+
+web_app:
+  build: .
+  dockerfile: path/to/my/apps/Dockerfile
+  ports:
+      - "8080:80"
+  links:
+      - database
+      - redis
+
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Running your containers</h2>
+            <pre>docker-compose.yml<code>
+                docker-compose up
+                docker-compose up -d  <--- daemon mode
+            </code></pre>
+        </section>
+
+
+
+        <section>
+            <h2>Back to Jenkins land</h2>
+        </section>
+
+        <section>
+            <h2>Docker Jenkins Plugin</h2>
+            <p><img src="images/docker-plugin.png" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>Docker Jenkins Plugin</h2>
+            <p class="fragment">connects to any host running docker</p>
+            <p class="fragment">creates a jenkins agent, runs job(s)</p>
+            <p class="fragment">spins down jenkins agent</p>
+        </section>
+
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker1.jpg" width="80%"></p>
+        </section>
+
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker2.jpg" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>Spinning up containers for testing</h2>
+            <pre><code>
+    docker-compose -f docker-compose.ci.testing.yml up -d
+    bin/run-test-suite-in-containers.sh
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Build app image out of green test run</h2>
+            <pre><code>
+    docker build -t falkirk_lug_app:${BUILD_NUMBER}    <-- jenkins var
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker-tag.png" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker2.jpg" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>Building with dynamic tag</h2>
+            <pre><code>
+    docker build -t my-registry.com/falkirk_lug_app:${BUILD_NUMBER}
+    docker build -t my-registry.com/falkirk_lug_app:JOB-34545
+    docker build -t my-registry.com/falkirk_lug_app:3ecedfd8
+
+    docker push my-docker-registry.company.com/falkirk_lug_app:JOB-34545
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Pushing to private docker registry</h2>
+            <pre><code>
+    docker push my-docker-registry.company.com/falkirk_lug_app:JOB-34545
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Registries overview</h2>
+            <p><img src="images/docker-registries.png" width="75%"></p>
+        </section>
+
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker3.jpg" width="75%"></p>
+        </section>
+
+        <section>
+            <h2>Build promotion</h2>
+            <p><img src="images/docker-pull.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Overview of docker pipeline</h2>
+            <p><img src="images/docker-pipeline.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Thank you Falkirk!</h2>
             <ul>
-                <li class="fragment">listitem</li>
+                <li class="">@dr4goonis / paul@dragoonis.com</li>
+                <li class=""><a href="github.com/dragoonis/talks/falkirk-lug-march-2016">github.com/dragoonis/talks/falkirk-lug-march-2016</a></li>
             </ul>
         </section>
-        <!-- template -->
-
-
-
 
     </div>
     <div class='footer'>
-        Dockerizing Your CI/CD Pipeline | Falkirk Linux User Group
+        Dockerizing Your CI/CD Pipeline | Falkirk Linux User Group | <a href="http://www.twitter.com/dr4goonis">@dr4goonis</a>
     </div>
 
 </div>

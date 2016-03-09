@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>PPI - The PHP Interoperability Framework</title>
+    <meta name="description" content="The PHP Interoperability Framework">
+    <meta name="author" content="Paul Dragoonis, Vítor Brandão">
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/ppi.css" id="theme">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>        <![endif]-->
+</head>
+<body>
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+
+
+      <section>
+          <h4>Dockerizing your CI/CD Pipeline</h4>
+          <img data-src="images/jenkins-docker.png" id="ppi-logo" width="70%">
+      </section>
+
+        <section>
+            <div>
+                <img src="images/dr4goonis.jpg" class="avatar">
+                <h4>Paul Dragoonis</h4>
+                <ul>
+                    <li class="fragment">From Glasgow (a weegie :-)</li>
+                    <li class="fragment">Full-Stack Software Consultant</li>
+                    <li class="fragment">Quality Assurance Engineer</li>
+                    <li class="fragment">@dr4goonis / paul@dragoonis.com</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h4>Analyse and influence on quality of</h4>
+            <ul>
+                <li class="fragment">code quality</li>
+                <li class="fragment">environmental quality (local, staging, prod)</li>
+                <li class="fragment">Behavioural-driven-development</li>
+                <li class="fragment">continuous integration pipelines</li>
+                <li class="fragment">security / scaling</li>
+                <li class="fragment">continuous deployment / rollback quality</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Automation</h2>
+            <p class="fragment">ps aux | grep java | grep -v grep | awk '{print $2}' | xargs kill</p>
+            <p class="fragment">while read in; do host "$in"; done < sites.txt | grep -iv "GOOGLE" | grep -E '1\.2\.3\.4|5\.6\.7\.8' | sed -e 's/has\ address\ 216.70.91.72//' | sed -e 's/has\ address\ 94.23.33.92//' | while read sites; do curl -sL -w "%{http_code} %{url_effective}\\n" "$sites" -o /dev/null; done | grep -ivE '4.*|5.*' | sed -e 's/200//' | sed -e 's/HTTP/http/'</p>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Automation</h2>
+            <p class="fragment">kill-java.sh</p>
+            <p class="fragment">find-google-referrers.sh > google-referrers.txt</p>
+            <p class="fragment">cron entry for: order-pizza.sh ;-) <3 selenium</p>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Continuous Integration</h2>
+            <p class="fragment">repeatable, continual way to automate tasks</p>
+            <p class="fragment">gain feedback on those tasks like: metrics, measurements, reports</p>
+        </section>
+
+
+
+        <section>
+            <h2 style="text-align: center">Continuous Deployment<br>vs<br>Continuous Delivery</h2>
+        </section>
+
+        <section>
+            <h2>Continuous Deployment</h2>
+            <p class="fragment">your pipline builds continuously</p>
+            <p class="fragment">but, you decide when you want to push the big red button</p>
+        </section>
+
+        <section>
+            <h2>Continuous Delivery</h2>
+            <p class="fragment">your pipline builds continuously</p>
+            <p class="fragment">once you have a green build, it promotes and goes to production with no manual intervention</p>
+        </section>
+
+
+        <section>
+            <h2>What is a pipeline?</h2>
+            <p>results moving through a series of steps from one side to the other.</p>
+
+        </section>
+
+        <section>
+            <h2>What does a pipeline consist of?</h2>
+            <ul>
+                <li class="fragment">jobs, lots of jobs!</li>
+                <li class="fragment">that have their own single responsibility</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>What to put in your pipeline</h2>
+            <ul>
+                <li>your code - More than one repo?<br>Jenkins MultipleSCM Plugin</li>
+                <li>&nbsp;</li>
+                <li>Quick initial checking</li>
+                <li>lint checking </li>
+                <li>unit tests</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>Perform thorough testing</h2>
+            <ul>
+                <li class="fragment">integration tests</li>
+                <li class="fragment">acceptance</li>
+                <li class="fragment">end-to-end testing</li>
+                <li class="fragment">security testing</li>
+                <li class="fragment">stress testing</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Linking your pipeline together</h2>
+        </section>
+
+        <section>
+            <h2>Triggers</h2>
+            <h4>(sequencing of the pipeline)</h4>
+            <ul>
+                <li class="fragment">downstream triggers - what to trigger next</li>
+                <li class="fragment">upstream triggers  - what to trigger before running current one</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Kicking off your pipeline</h2>
+            <ul>
+                <li class="fragment">Commit triggered pipelines</li>
+                <li class="fragment">Manually triggered(parameterised) pipelines</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Managing the Pipline</h2>
+        </section>
+
+        <section>
+            <h2>Build Pipeline Plugin</h2>
+            <p><img src="images/jenknis-build-pipeline.png"></p>
+        </section>
+
+        <section>
+            <h2>Build Pipeline Plugin</h2>
+            <p><img src="images/build-pipeline2.png"></p>
+        </section>
+
+
+        <section>
+            <h2>Delivery Pipeline Plugin</h2>
+            <p><img src="images/delivery-pipeline2.png"></p>
+        </section>
+
+        <section>
+            <h2>Delivery Pipeline Plugin</h2>
+            <p><img src="images/delivery-pipeline.png" width="70%"></p>
+        </section>
+
+        <section>
+            <h2>Maintaining your pipeline/jobs</h2>
+        </section>
+
+        <section>
+            <h2>CloudBees folders plugin<br>group your jobs</h2>
+            <p><img src="images/folders-plugin.png"></p>
+        </section>
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+job('PROJ-unit-tests') {
+    scm {
+        git('git://github.com/jenkinsci/job-dsl-plugin.git')
+    }
+    triggers {
+        scm('*/15 * * * *')
+    }
+    steps {
+        maven('-e clean test')
+    }
+}
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+job('unit-tests') {
+    scm {
+        git('git://github.com/jenkinsci/job-dsl-plugin.git')
+    }
+    steps {
+        shell('prepare.sh')
+        shell('run-unit-tests.sh')
+    }
+}
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+folder('project-a')
+
+deliveryPipelineView('project-a-deliver-pipeline')
+
+buildPipelineView('project-a-build-pipeline')
+
+buildMonitorView('project-a-build-monitor')
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Problems with standlone Jenkins</h2>
+            <p class="fragment">Scaling is hard, one slave per machine</p>
+            <p class="fragment">One environment for your all your jobs</p>
+            <p class="fragment">installed directly onto the jenkins host</p>
+            <p class="fragment">CI env inconsistent from staging/prod</p>
+        </section>
+
+        <section>
+            <h2>Docker to the rescue</h2>
+            <p><img src="images/jenkins-docker-muscles.jpg"></p>
+        </section>
+
+        <section>
+            <h2>What is docker?</h2>
+            <p class="fragment"><i>Docker is an open-source project, which allows you to create lightweight, portable, distributable, self-sufficient containers, of an application with all of its dependencies</i></p>
+            <p class="fragment"><i>Containers running on a single machine all share the same OS/kernel/filesystem so they start instantly and make more efficient use of RAM.</i></p>
+        </section>
+
+        <section>
+            <h2>What is docker?</h2>
+            <p><img src="images/docker-explained.jpeg" width="60%"></p>
+        </section>
+
+        <section>
+            <p><img src="images/docker-containers2.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Docker on different OS</h2>
+            <p><img src="images/docker-locally.jpg" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Docker Hub (official registry)</h2>
+            <p><img src="images/docker-hub.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Running an image from docker hub</h2>
+              <pre><code>
+    docker pull image_name:tag
+    docker pull nginx:latest
+    docker pull node:5.6
+    docker pull mysql-server:5.7
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Making your own image</h2>
+              <pre>Dockerfile<code>
+FROM ubuntu:14.04
+
+RUN apt-get update && apt-get install -y python python-dev postgresql
+
+USER postgres
+
+RUN /etc/init.d/postgresql start && createdb -T template0 -E UTF8 my_database
+
+USER root
+
+EXPOSE 5432
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Making your own image</h2>
+              <pre>Dockerfile<code>
+FROM php7.0-cli:latest
+
+RUN apt-get update && apt-get install -y nginx
+
+USER www-data
+ENTRYPOINT nginx -g 'daemon off;'
+EXPOSE 80
+              </code></pre>
+        </section>
+
+
+        <section>
+            <h2>Building your image</h2>
+            <pre><code>
+docker build -t ed_techmeetup:1
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Docker compose (container orchestration)</h2>
+            <pre>docker-compose.yml<code>
+
+application:
+  build: .
+  dockerfile: path/to/my/apps/Dockerfile
+  ports:
+      - "8080:80"
+
+database:
+  image: ed_techmeetup:1
+
+cache:
+  image: redis:latest
+  ports:
+    - "6379:6379"
+            </code></pre>
+        </section>
+
+
+
+        <section>
+            <h2>Running your containers</h2>
+            <pre><code>
+                docker-compose up  <--- you will see all logs of all containers
+
+                docker-compose up -d  <--- daemon mode, runs in background
+
+                docker-compose logs <--
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Back to Jenkins land</h2>
+        </section>
+
+        <section>
+            <h2>Docker Jenkins Plugin</h2>
+            <p style="background-color: white"><img src="images/docker-plugin.png" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>Docker Jenkins Plugin</h2>
+            <p class="fragment">connects to any host running docker</p>
+            <p class="fragment">creates an isolated environment for your jobs</p>
+            <p class="fragment">runs your jobs inside it</p>
+            <p class="fragment">spins down isolated environment</p>
+        </section>
+
+
+
+        <section>
+            <p style="background-color: white"><img src="images/docker-ci-dev-flow.jpg" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Build app image out of green test run</h2>
+            <pre><code>
+docker build -t my-registry.com/ed_techmeetup:JOB-${BUILD_NUMBER} <- jenkins var
+docker build -t my-registry.com/ed_techmeetup:JOB-34545
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>CI Workflow with Docker</h2>
+            <p><img src="images/docker-tag.png" width="80%"></p>
+        </section>
+
+        <section>
+            <h2>Integration testing with your containers</h2>
+            <pre><code>
+    cp docker-compose.ci.testin.yml docker-compose.yml
+
+    docker-compose -d up
+
+    run-integration-test-suite.sh
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Pushing to private docker registry</h2>
+            <pre><code>
+docker push my-docker-registry.company.com/ed_techmeetup:JOB-${BUILD_NUMBER}
+            </code></pre>
+        </section>
+
+        <section>
+            <p style="background-color: white"><img src="images/docker-pipeline.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Overview of docker pipeline</h2>
+            <p style="background-color: white"><img src="images/DockerWorkflow.png"/></p>
+        </section>
+
+        <section>
+            <h4>Thank you Edinburgh!</h4>
+            <ul>
+                <li class="">@dr4goonis / paul@dragoonis.com</li>
+                <li class=""><a href="github.com/dragoonis/talks/falkirk-lug-march-2016">github.com/dragoonis/talks/edinburgh-techmeetup-lug-march-2016</a></li>
+                <li class="">Available for hire, get in touch!</li>
+            </ul>
+        </section>
+
+    </div>
+    <div class='footer'>
+        Dockerizing Your CI/CD Pipeline | Edinburgh Tech Meetup | <a href="http://www.twitter.com/dr4goonis">@dr4goonis</a>
+    </div>
+
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.min.js"></script>
+<script src="js/presentable.min.js"></script>
+<script>
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        slideNumber: true,
+        minScale: 0.2,
+        maxScale: 1.5,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        transitionSpeed: 'default', // default/fast/slow
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'plugin/zoom-js/zoom.js', async: true},
+            {src: 'plugin/notes/notes.js', async: true},
+        ]
+    });
+</script>
+</body>
+</html>

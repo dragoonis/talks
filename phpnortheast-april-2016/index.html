@@ -217,10 +217,463 @@ class HelloController
         </section>
 
         <section>
-            <h2>Designing PHP Apps In Frameworks</h2>
-            <p class="">Controllers are easy to mess up, create high technical debt</p>
-            <p class="fragment">Use Controller Factories - don't use ServiceLocator or Container</p>
+            <h2>DI Controllers - Benefits</h2>
+            <p class="">You can mock out your whole system, and test the controller + templating layer</p>
+            <p class="fragment">Without needing to use Selenium</p>
         </section>
+
+        <section>
+            <h2>Controllers -> Actions</h2>
+            <p>BlogController::indexAction(), BlogController::updateAction(), BlogController::deleteAction()</p>
+            <p class="fragment">BlogIndexAction, BlogUpdateAction, BlogDeleteAction</p>
+        </section>
+
+        <section>
+            <h2>MVC was okay</h2>
+            <p class="fragment">
+                <p>but it didn't really fit what we're doing</p>
+                <p style="background-color: white;"><img src="images/mvc.png" /></p>
+            </p>
+        </section>
+
+        <section>
+            <h1>ADR</h1>
+            <p class="fragment">
+                <p>Action -> Domain -> Responder</p>
+                <p><img src="images/adr.png" /></p>
+            </p>
+        </section>
+
+        <section>
+            <h2>ADR Structure</h2>
+            <pre>
+    Action/
+        BlogIndexAction.php
+        BlogCreateAction.php
+    Domain/
+        # Model, Gateway, Mapper, Entity, Collection, Service, etc.
+    Responder/
+        BlogIndexResponder.php
+        BlogCreateResponder.php
+        html/
+            index.html.php
+            create.html.php
+        json/
+            index.json.php
+            read.json.php
+            </pre>
+
+        </section>
+
+
+        <section>
+            <h4>ADR Action</h4>
+            <pre><code>&lt;?php
+use Framework\Action;
+
+class BlogCreateAction extends Action
+{
+
+    protected $request;
+    protected $domain;
+    protected $responder;
+
+    public function __construct(
+        Request $request,
+        BlogService $domain,
+        BlogCreateResponder $responder
+    ) {
+        $this->request = $request;
+        $this->domain = $domain;
+        $this->responder = $responder;
+    }
+?></code></pre>
+        </section>
+
+        <section>
+            <h4>ADR Action</h4>
+            <pre><code>&lt;?php
+
+    public function __invoke()
+    {
+        // is this a POST request?
+        if ($this->request->isPost()) {
+            $this->domain->createBlogPost($this->request->getPost());
+        } else {
+            // not a POST request, use default values
+            $blog = $this->domain->getDefault();
+        }
+
+        // set data into the response
+        $this->responder->setData(array('blog' => $blog));
+        $this->responder->__invoke();
+    }
+}</code></pre>
+        </section>
+
+        <section>
+            <h4>ADR Responder</h4>
+            <pre><code>&lt;?php
+use Framework\Responder;
+
+class BlogCreateResponder extends Responder
+{
+    // $this->response is the actual response object, or a response descriptor
+    // $this->view is a view or template system
+    public function __invoke()
+    {
+        // is there an ID on the blog instance?
+        if ($this->data->blog->id) {
+            // redirect to editing.
+            $this->response->setRedirect('/blog/edit/{$blog->id}');
+        } else {
+            // no, which means it has not been saved yet.
+            // show the creation form with the current response data.
+            $this->response->setContent($this->view->render(
+                'create.html.php',
+                $this->data
+            ));
+        }
+    }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Learn more</h2>
+            <p>https://github.com/pmjones/adr</p>
+        </section>
+
+        <section>
+            <h2>Designing with Factories</h2>
+    </section>
+
+        <section>
+            <h2>Simple Factory</h2>
+            <p>The biggest value in the factory pattern is that it can encapsulate what would normally be a lot of object setup into a single, simple method call.</p>
+        </section>
+
+        <section>
+            <h2>Simple Factory - static call</h2>
+<pre><code>&lt;?php
+class VehicleFactory
+{
+    public static function build(string $make, string $model, string $color) : VehicleInterface {
+        $vehicle = new Vehicle;
+
+        // vehicle needs a chassis which is produced by another factory
+        $vehicle->addPart(VehicleChassisFactory::build($make, $model));
+
+        // needs an engine built by someone else
+        $vehicle->addPart(VehicleEngineFactory::build($make, $model));
+
+        return $vehicle;
+    }
+}
+
+// build a new white VW Amarok
+$myCar = VehicleFactory::build("Volkswagon", "Astra", "white");
+$myCar->drive();
+</code></pre>
+        </section>
+
+
+
+        <section>
+            <h2>Abstract Factory - Interface</h2>
+<pre><code>&lt;?php
+interface VehicleFactoryInterface
+{
+    public function build(VehicleInterface $vehicle) : VehicleInterface;
+}
+</code></pre>
+</section>
+        <section>
+            <h2>Abstract Method - With Factory Method</h2>
+<pre><code>&lt;?php
+abstract class VehicleFactory implements VehicleFactoryInterface
+{
+    abstract protected $vehicle;
+    abstract protected function createEngine(string $make, string $model) : VehicleEngineInterface;
+    abstract protected function createChassis(string $make, string $model) : VehicleChassisInterface;
+
+    public function build(VehicleInterface $vehicle) : VehicleInterface
+    {
+        $make = $vehicle->getMake();
+        $model = $vehicle->getModel();
+
+        $vehicle->addPart($this->createEngine($make, $model));
+        $vehicle->addPart($this->createChassis($make, $model));
+
+        return $this->vehicle;
+
+    }
+}
+</code></pre>
+</section>
+
+
+<section>
+<pre><code>&lt;?php
+class CreateVehiclePage
+{
+    private $vehicleFactory;
+
+    public function __construct(TractorVehicleFactory $factory)
+    {
+        $this->vehicleFactory = $factory;
+    }
+    // or
+    public function __construct(BoatVehicleFactory $factory)
+    {
+        $this->vehicleFactory = $factory;
+    }
+
+    public function build($make, $model)
+    {
+        return $this->vehicleFactory->build(new Vehicle($make, $model));
+    }
+}
+
+</code></pre>
+
+        </section>
+
+
+<section>
+    <h2>Factory Method</h2>
+<pre><code>&lt;?php
+class Vehicle
+{
+
+    public function __construct($make, $model) { .. }
+
+    public function buildBoat()
+    {
+        $vehicle = new Vehicle($this->make, $this->model);
+        $factory = new VehicleBoatFactory();
+        $boat = $factory->build($vehicle);
+        return $boat;
+    }
+
+    public function buildTractor($make, $model)
+    {
+        $vehicle = new Tractor($this->make, $this->model);
+        $factory = new VehicleTractorFactory();
+        $tractor = $factory->build($vehicle);
+        return $tractor;
+    }
+
+}
+</code></pre>
+
+        </section>
+
+        <section>
+            <h2>Value Objects - Immutability</h2>
+        </section>
+
+        <section>
+            <h2>Benefits of Immutability:</h2>
+
+            <p>immutable objects are simpler to create, test, and use</p>
+            <p class="fragment">using them is side-effect free</p>
+            <p class="fragment">identity problems are removed</p>
+        </section>
+
+
+<section>
+    <h2>Vehicle Without Value Objects</h2>
+<pre><code>&lt;?php
+class Vehicle implements VehicleInterface
+{
+    private $make;
+    private $model;
+
+    public function __construct(string $make, string $model)
+    {
+        $allowedList = [....];
+        if(!in_array($make, $allowedList)) {
+            throw new \InvalidArgumentException('This is not a valid vehicle make');
+        }
+
+        $allowedList = [....];
+        if(!in_array($model, $allowedList)) {
+            throw new \InvalidArgumentException('This is not a valid vehicle model');
+        }
+
+        $this->make = $make;
+        $this->model = $model;
+    }
+}
+</code></pre>
+        </section>
+
+<section>
+    <h2>Boat Vehicle Without Value Objects</h2>
+<pre><code>&lt;?php
+class Boat extends Vehicle
+{
+    private $make;
+    private $model;
+
+    public function __construct(string $make, string $model)
+    {
+        $allowedList = [....];
+        if(!in_array($make, $allowedList)) {
+            throw new \InvalidArgumentException('This is not a valid boat make');
+        }
+
+        $allowedList = [....];
+        if(!in_array($model, $allowedList)) {
+            throw new \InvalidArgumentException('This is not a valid boat model');
+        }
+
+        $this->make = $make;
+        $this->model = $model;
+    }
+}
+</code></pre>
+        </section>
+
+
+
+<section>
+    <h2>Value Object - VehicleMake</h2>
+<pre><code>&lt;?php
+class VehicleMake
+{
+    private $make;
+
+    public function __construct(string $make)
+    {
+        $allowedList = [....];
+        if(!in_array($make, $allowedList)) {
+            throw new \InvalidArgumentException('This is not a valid vehicle make');
+        }
+        $this->make = $make;
+    }
+
+    public function getValue() : string
+    {
+        return $this->make;
+    }
+}
+
+</code></pre>
+        </section>
+
+<section>
+    <h2>Vehicle With Value Objects</h2>
+<pre><code>&lt;?php
+class Vehicle implements VehicleInterface
+{
+    private $make;
+    private $model;
+
+    public function __construct(VehicleMake $make, VehicleModel $model)
+    {
+        $this->make = $make;
+        $this->model = $model;
+    }
+}
+
+$make = new VehicleMake("Mercedes");
+$model = new VehicleModel("Benz");
+$vehicle = new Vehicle($make, $model);
+</code></pre>
+        </section>
+
+
+        <section>
+            <h2>DTO - Data Transfer Object</h2>
+            <p><img src="images/dto.gif" /></p>
+        </section>
+
+        <section>
+            <h2>DTO</h2>
+            <p>DTOs do not contain any business logic, they are just hydrated PHP objects with types</p>
+            <p class="fragment">They are efficient to properly expose domain data via REST like services to a JavaScript client.</p>
+            <p class="fragment">You should not expose your Domain Model as-is over a public interface, such as a REST API.</p>
+            <p class="fragment">That is why you should use Data Transfer Objects (DTOs)</p>
+            <p class="fragment">You can send DTO’s into battle with the templating layer.</p>
+            <p class="fragment">You can ask Doctrine2 to hydrate your DTO's for you</p>
+        </section>
+
+
+        <section>
+            <h2>Doctrine DTO</h2>
+            <pre><code>&lt;?php
+    $query = $em->createQuery('SELECT NEW CustomerDTO(c.name, e.email, a.city) FROM Customer c JOIN c.email e JOIN c.address a');
+            </code></pre>
+        </section>
+
+
+        <section>
+            <h2>UUIDs over Auto Increment</h2>
+            <p>A UUID (Universal Unique Identifier) is a 128-bit number</p>
+            <p>123e4567-e89b-12d3-a456-426655440000<p>
+
+</section>
+
+<section>
+    <h2>Why Auto Increment is no good</h2>
+<p>Created a blocking DB operation</p>
+<p class="fragment">Your object never has a valid ID until persisted</p>
+<p class="fragment">Your object does not work without the DB connected to it providing IDs</p>
+<p class="fragment">You need to persist, then read, then go persist, then read again.</p>
+<p class="fragment">You can generate all this up front and populate your objects and then persist them.</p>
+</section>
+
+<section>
+<h2>UUID Has Versions</h2>
+<p>https://github.com/ramsey/uuid</p>
+    <pre><code>
+    // Generate a version 1 (time-based) UUID object
+    $uuid1 = Uuid::uuid1();
+    echo $uuid1->toString() . "\n"; // i.e. e4eaaaf2-d142-11e1-b3e4-080027620cdd
+
+    // Generate a version 3 (name-based and hashed with MD5) UUID object
+    $uuid3 = Uuid::uuid3(Uuid::NAMESPACE_DNS, 'php.net');
+    echo $uuid3->toString() . "\n"; // i.e. 11a38b9a-b3da-360f-9353-a5a725514269
+
+    // Generate a version 4 (random) UUID object
+    $uuid4 = Uuid::uuid4();
+    echo $uuid4->toString() . "\n"; // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
+
+    // Generate a version 5 (name-based and hashed with SHA1) UUID object
+    $uuid5 = Uuid::uuid5(Uuid::NAMESPACE_DNS, 'php.net');
+    echo $uuid5->toString() . "\n"; // i.e. c4a760a8-dbcf-5254-a0d9-6a4474bd1b62
+</code></pre>
+</section>
+
+
+<section>
+    <h2>UUID Example</h2>
+        <pre><code>
+class User
+{
+    public static function create()
+    {
+        $this->id = Uuid4();
+    }
+}
+
+class UserImage
+{
+    private $userId;
+
+    public function __construct(Uuid $userId)
+    {
+        $this->userId = $userId;
+    }
+
+    public function createImage($imagePath)
+    {
+        $this->imageStorage->create($userId, $imagePage);
+    }
+}
+</code></pre>
+</section>
 
 
         <section>

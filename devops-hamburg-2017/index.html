@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Dockerizing PHP CI Pipelines - Hamburg DevOps</title>
+    <meta name="description" content="Dockerizing PHP CI Pipelines - Hamburg DevOps">
+    <meta name="author" content="Paul Dragoonis">
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/ppi.css" id="theme">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>        <![endif]-->
+</head>
+<body>
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+
+      <section style="position:relative">
+          <h4>Dockerizing PHP CI Pipelines</h4>
+          <img data-src="images/jenkins-docker.png" id="ppi-logo" width="70%">
+          <br>
+      </section>
+
+        <section>
+            <div class="">
+                <img src="images/dr4goonis.jpg" class="avatar">
+                <h4>Paul Dragoonis</h4>
+                <ul>
+                    <li class="fragment">Full-Stack Software Consultant</li>
+                    <li class="fragment">From Scotland</li>
+                    <li class="fragment">OSS Contributor</li>
+                    <li class="fragment">Conference Organiser</li>
+                    <li class="fragment">I like Whisky :-)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <div class="">
+                    <p class=""><img src="images/karten.jpg" style="width: 200px; "></p>
+                    <p>My first day in Hamburg!</p>
+                    <p class="">Consulting for www.kartenmacherei.de</p>
+                    <p class="">Building Docker CI Pipelines</p>
+            </div>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Continuous Integration</h2>
+            <p>Automation of commands</p>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Automation</h2>
+            <p class="fragment">ps aux | grep java | grep -v grep | awk '{print $2}' | xargs kill</p>
+            <p class="fragment">while read in; do host "$in"; done < sites.txt | grep -iv "GOOGLE" | grep -E '1\.2\.3\.4|5\.6\.7\.8' | sed -e 's/has\ address\ 216.70.91.72//' | sed -e 's/has\ address\ 94.23.33.92//' | while read sites; do curl -sL -w "%{http_code} %{url_effective}\\n" "$sites" -o /dev/null; done | grep -ivE '4.*|5.*' | sed -e 's/200//' | sed -e 's/HTTP/http/'</p>
+        </section>
+
+        <section>
+            <h2 style="text-align: center">Automation</h2>
+            <p class="fragment">kill-java-processes.sh</p>
+            <p class="fragment">find-google-referrers.sh > google-referrers.txt</p>
+            <p class="fragment">order-pizza-from-just-eat.sh ;-) (selenium)</p>
+        </section>
+
+        <section>
+            <h2>What is a pipeline?</h2>
+            <p>results moving through a series of steps from one side to the other.</p>
+        </section>
+
+        <section>
+            <h2>What does a pipeline consist of?</h2>
+            <ul>
+                <li class="fragment">jobs, lots of jobs!</li>
+                <li class="fragment">that have their own single responsibility</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>What to put in your pipeline</h2>
+            <ul>
+                <li>Quick initial checking</li>
+                <li>lint checking </li>
+                <li>unit tests</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>Perform thorough testing</h2>
+            <ul>
+                <li class="">integration tests</li>
+                <li class="">acceptance</li>
+                <li class="">end-to-end testing</li>
+                <li class="">security testing</li>
+                <li class="">stress testing</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Linking your pipeline together</h2>
+        </section>
+
+        <section>
+            <h2>Triggers</h2>
+            <h4>(sequencing of the pipeline)</h4>
+            <ul>
+                <li class="">downstream triggers - what to trigger next</li>
+                <li class="">upstream triggers  - what to trigger before running current one</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Kicking off your pipeline</h2>
+            <ul>
+                <li class="fragment">Commit triggered pipelines</li>
+                <li class="fragment">Manually triggered(parameterised) pipelines</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Managing the Pipline</h2>
+        </section>
+
+
+        <section>
+            <h2>Build Pipeline Plugin</h2>
+            <p><img src="images/build-pipeline2.png"></p>
+        </section>
+
+        <section>
+            <h2>Delivery Pipeline Plugin</h2>
+            <p><img src="images/delivery-pipeline.png" width="70%"></p>
+        </section>
+
+        <section>
+            <h2>Maintaining your pipeline/jobs</h2>
+        </section>
+
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+job('BUILD') {
+    scm {
+        git('git://github.com/myorg/ci-scripts.git')
+    }
+
+    logRotator {
+        numToKeep 5
+    }
+
+    steps {
+        shell('/usr/local/run-tests.sh')
+    }
+}
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+  properties([
+    parameters([
+      choice(choices: 'qa\npreview\nstaging\nproduction', name: 'TARGET'),
+      choice(choices: 'quick\nfull', name: 'TEST_TYPE'),
+    ])
+  ])
+
+  if (env.TEST_TYPE == 'full') {}
+
+  if(env.TARGET == 'production') {
+      stage ('Production ') {
+        sh 'prod-smoke-tests.sh'
+      }
+  }
+
+   if (env.BRANCH_NAME == 'master') {
+        // .. custom master stuff
+   }
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>JobDSL Plugin</h2>
+              <pre><code>
+job('INTEGRATION TESTS') {
+    scm {
+        git('git://github.com/myorg/ci-scripts.git')
+    }
+    steps {
+        shell('run-integration-tests.sh')
+    }
+}
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Problems with standlone Jenkins</h2>
+            <p class="fragment">Scaling is hard, one slave per machine</p>
+            <p class="fragment">One environment for your all your jobs, installed directly onto the jenkins host</p>
+            <p class="fragment">CI env inconsistent from dev/staging/prod</p>
+        </section>
+
+        <section>
+            <h2>Docker to the rescue</h2>
+            <p><img src="images/jenkins-docker-muscles.jpg"></p>
+        </section>
+
+        <section>
+            <p>Easy to change the infrastructure, in your app's repo</p>
+            <p>UNIFIED ARCHITECTURE</p>
+        </section>
+
+        <section>
+            <h2>What is docker?</h2>
+            <p><img src="images/docker-explained.jpeg" width="60%"></p>
+        </section>
+
+        <section>
+            <p><img src="images/docker-containers2.png" width="100%"></p>
+        </section>
+
+        <section>
+            <h2>Example Docker Setup</h2>
+            <p><img src="images/example-docker-app.jpeg"/></p>
+        </section>
+
+        <section>
+            <h2>JobDSL Steps For Docker CI build</h2>
+              <pre><code>
+job('ALL TASKS') {
+    scm {
+        git('git://github.com/myorg/ci-scripts.git')
+    }
+    steps {
+        shell('build.sh')
+        shell('run-unit-tests.sh')
+        shell('run-integration-tests.sh')
+        shell('save-artifacts.sh')
+        shell('publish-image.sh')
+        shell('cleanup.sh')  <-- always run this
+    }
+}
+              </code></pre>
+        </section>
+
+        <section>
+            <h2>Overview of docker pipeline</h2>
+            <p style="background-color: white"><img src="images/docker-ci-flow.png"/></p>
+        </section>
+
+        <section>
+            <h2>Overview of docker pipeline</h2>
+            <p style="background-color: white"><img src="images/DockerWorkflow.png"/></p>
+        </section>
+
+        <section>
+            <h4>Preview server</h4>
+            <p><img src="images/preview-server.png" width="70%" /></p>
+        </section>
+
+        <section>
+            <h2>Time to dig deeper!</h2>
+            <p>Anatomy of docker</p>
+            <p>Ordering of commands</p>
+            <p>Docker layering</p>
+            <p>Base Images</p>
+            <p>More stuff</p>
+        </section>
+
+
+
+        <section>
+            <h4>Anatomy - Dockerfile</h4>
+            <pre><code>
+FROM ruby:2.2.6
+
+WORKDIR /var/www
+
+ENV NGINX_VERSION 1.9.9-1~jessie
+
+COPY ./ /var/www/
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Anatomy - Layering</h4>
+            <pre><code>
+FROM ubuntu:latest             #This has its own number of layers say "X"
+MAINTAINER FOO          #This is one layer
+RUN mkdir /tmp/foo      #This is one layer
+RUN apt-get install vim #This is one layer
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Anatomy - Layering</h4>
+            <pre><code>
+$: docker history jenkins:1.609.1
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+/bin/sh -c #(nop) COPY file:9ad619ae59ee04...   727 B
+/bin/sh -c #(nop) ENTRYPOINT &{["/usr/loca...   0 B
+/bin/sh -c #(nop) COPY file:46b354d30a79af...   1.28 kB
+/bin/sh -c #(nop) USER [jenkins]                0 B
+/bin/sh -c touch $COPY_REFERENCE_FILE_LOG ...   0 B
+/bin/sh -c #(nop) ENV COPY_REFERENCE_FILE_...   0 B
+/bin/sh -c #(nop) EXPOSE 50000/tcp              0 B
+/bin/sh -c #(nop) EXPOSE 8080/tcp               0 B
+/bin/sh -c chown -R jenkins "$JENKINS_HOME...   180 B
+/bin/sh -c #(nop) ENV JENKINS_UC=https://u...   0 B
+/bin/sh -c curl -fL http://mirrors.jenkins...   68.9 MB
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Anatomy - Dockerfile</h4>
+            <pre><code>
+# Install System Dependencies
+RUN echo "deb http://nginx.org/packages jessie nginx" >> /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y ca-certificates nginx=${NGINX_VERSION} nano wget git \
+    && apt-get clean && apt-get purge \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Anatomy - Dockerfile</h4>
+            <pre><code>
+# Install SSH keys
+RUN chown -R build:build /home/build/ && chmod 0600 /home/build/.ssh/id_rsa
+# Copy all app code
+COPY . /var/www
+
+USER build
+RUN chmod -R go-w ~/.composer/vendor && chown -R root:root /app/vendor/ && \
+    chmod -R go-w /app/vendor/ && chown -R www:www /app/app/cache && \
+
+    # Framework specific setup commands
+    php app/console assets:install web  --env=prod --symlink --verbose && \
+    chown www-data -R /var/www
+
+# Run a healthcheck as user 'www'
+USER www
+RUN php app/console infra:healthcheck
+
+# Accessible ports by other containers
+EXPOSE 80 443
+
+# Startup command, to keep the container running and alive
+ENTRYPOINT /usr/sbin/nginx -g 'daemon off;'
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>build.sh</h4>
+            <pre><code>
+docker images | grep ${BUILD_NUMBER} \
+    | awk '{ value=$1":"$2; print value }' \
+    | xargs docker rmi -f || true
+
+# bake in the build number to the preview yml file
+sed -i 's/%BUILD_TAG%/${BUILD_NUMBER}/g' docker-compose.qa.yml
+
+docker pull my-registry.com/php-webserver-base:latest || true
+
+docker build --force-rm=true --pull --tag="registry.com/myapp:${BUILD_NUMBER}" .
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Automating our automation - Makefiles</h4>
+            <pre><code>
+BASE = my-registry.com/myorg
+NAME = myapp
+TAG = $(TAG)
+
+.PHONY: all build test shell run clean
+
+all: build test
+
+build:
+	docker build --pull --force-rm -t ${BASE}/${NAME}:${TAG} .
+
+shell:
+	docker run -P --rm -it --name ${NAME} ${BASE}/${NAME}:$(TAG) /bin/sh
+
+run:
+	docker run -P --rm --name ${NAME} ${BASE}/${NAME}:$(TAG)
+
+clean:
+	docker rmi ${BASE}/${NAME}:$(TAG)
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Automating our automation - Makefiles</h4>
+            <pre><code>
+#!/bin/bash
+set -e
+
+# Update Docker compose yaml with build key and number, of image built in build.sh
+sed -i 's/%BUILD_TAG%/${BUILD_NUMBER}/g' docker-compose.ci.yml
+
+echo "Unit Tests ..."
+/usr/local/bin/docker-compose -f docker-compose.ci.yml run \
+    --rm --entrypoint="bash -c " application "/var/www/tests/run-unit-tests.sh"
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>docker compose for container orchestration</h4>
+            <h4>docker-compose.ci.yml</h4>
+            <pre><code>
+services:
+    application:
+        image: my-registry.com/myapp:%BUILD_TAG%
+        environment:
+            SYMFONY_ENVIRONMENT: test
+        entrypoint: ./opt/deployment/test/start.sh
+        ports:
+            - 80
+        volumes:
+            - ./opt/php/dev/php.ini:/usr/local/etc/php/php.ini
+            - ./opt/nginx/dev/default.conf:/etc/nginx/conf.d/default.conf
+            - ./build:/var/www/build
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>run-integration-tests.sh</h4>
+            <pre><code>
+#!/bin/bash
+set -e
+
+# Update Docker compose yaml with build key and number, of image built in build.sh
+sed -i 's/%BUILD_TAG%/${BUILD_NUMBER}/g' docker-compose.ci.yml
+
+# Boot up our stack in the background
+echo "Creating containers ..."
+/usr/local/bin/docker-compose -f docker-compose.ci.yml up -d
+
+echo "Waiting for containers to be ready for test-suite ... this will take around one minute"
+
+# wait until we see "fpm is running" then we're ready to begin our test suite
+bash -c '/usr/local/bin/docker-compose -f docker-compose.ci.yml logs application | { sed "/nginx is running/ q" && kill -PIPE $$ ; }' > /dev/null 2>&1
+
+# execute integration tests
+docker-compose -f docker-compose.ci.yml run --rm \
+    --entrypoint="bash -c " application "bin/run-integration-tests.sh"
+
+# clean up old volumes too
+docker-compose -f docker-compose.ci.yml down -v
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>save-artifacts.sh</h4>
+            <pre><code>
+docker cp %%containerId%%:/var/www/public/screenshots ./build/screenshots
+docker cp %%containerId%%:/var/www/build/phpunit/junit.xml ./build/phpunit/junit.xml
+docker cp %%containerId%%:/var/www/build/phpunit/coverage-html/ ./build/phpunit-coverage
+            </code></pre>
+        </section>
+
+
+        <section>
+            <h4>publish-image.sh</h4>
+            <pre><code>
+#!/bin/bash
+set -e
+
+docker push my-registry.com/myapp:${BUILD_NUMBER}
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>cleanup.sh</h4>
+            <pre><code>
+#!/bin/bash
+set -e
+
+docker rmi -f my-registry.com/myapp:${BUILD_NUMBER} || exit 0
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>Base Images</h4>
+            <pre><code>
+FROM my-registry.com/php-webserver-base:latest
+
+# Copy all app code
+COPY . /var/www
+
+# Fix permissions
+chown -R root:root /app/vendor/ && \
+chmod -R go-w /app/vendor/ && \
+chown -R www:www /app/app/cache/
+
+# Now we begin to prep the boot process
+USER www
+
+# Run a healthcheck as user 'www'
+RUN php artisan infra:healthcheck
+
+# Accessible ports by other containers
+EXPOSE 80 443
+
+# Startup command, to keep the container running and alive
+ENTRYPOINT /usr/sbin/nginx -g 'daemon off;'
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Show and Tell Time!</h2>
+            <p><a href="https://github.com/dragoonis/docker-ci-scripts" target="_blank">https://github.com/dragoonis/docker-ci-scripts</a></p>
+        </section>
+
+        <section>
+            <ul style="line-height: 180%;">
+                <li>Please leave me feedback!</li>
+                <li>T: <a href="https://twitter.com/dr4goonis">@dr4goonis</a></li>
+                <li>E: <a href=""><a href="">paul@dragoonis.com</a></li>
+            </ul>
+        </section>
+
+    </div>
+    <div class='footer'>
+        Dockerizing CI Pipelines | Hamburg DevOps 2017 | <a href="http://www.twitter.com/dr4goonis">@dr4goonis</a>
+    </div>
+
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.min.js"></script>
+<script src="js/presentable.min.js"></script>
+<script>
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        slideNumber: true,
+        minScale: 0.2,
+        maxScale: 1.5,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        transitionSpeed: 'default', // default/fast/slow
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'plugin/zoom-js/zoom.js', async: true},
+            {src: 'plugin/notes/notes.js', async: true},
+        ]
+    });
+</script>
+</body>
+</html>
